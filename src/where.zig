@@ -1,0 +1,18 @@
+const std = @import("std");
+
+pub fn iterator(comptime BaseType: type, comptime ItType: type, filter: fn(BaseType) bool) type {
+    return struct {
+        nextIt: &ItType,
+
+        const Self = this;
+
+        pub fn next(self: &Self) ?BaseType {
+            while (self.nextIt.next()) |nxt| {
+                if (filter(nxt)) {
+                    return nxt;
+                }
+            }
+            return null;
+        }
+    };
+}
