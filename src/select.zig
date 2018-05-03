@@ -14,7 +14,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
         }
 
         pub fn reset(self: &Self) void {
-            nextIt.reset();
+            self.nextIt.reset();
         }
     };
 }

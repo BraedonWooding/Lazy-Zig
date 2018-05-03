@@ -44,6 +44,7 @@ fn main() void {
     it.reset();
     var buf: [100]i32 = 0;
     // Lets turn it into an array
+    // In this case we didn't have to reset, as the array automatically does
     var array = it.toArray(buf);
     var i: usize = 0;
     while (i < array.len) : (i += 1) {
@@ -66,4 +67,8 @@ Just import the index like `const Lazy = @import("Lazy/index.zig");` and use lik
 
 ## 'Lazy' Iterators vs 'Arrays'
 
-Lazy iterators effectively allow us to 'yield' which basically just formulates a state machine around your code, figuring out the next step as you go.  To initialise a lazy iterator you just call `Lazy.init(array)`, and then you can perform whatever you want to the array, then to cast it back if you wish you can either call `.toArray(buffer)` (giving a buffer), or `.toArray(allocator)` (giving an allocator).
+Lazy iterators effectively allow us to 'yield' which basically just formulates a state machine around your code, figuring out the next step as you go.  To initialise a lazy iterator you just call `Lazy.init(array)`, and then you can perform whatever you want to the array, then to cast it back if you wish you can either call `.toArray(buffer)` (giving a buffer), or `.toList(allocator)` (giving an allocator, returning a list).
+
+## Difference between 'lazy' and 'evaluated' functions
+
+An evaluated function evaluates all the values within the 'set', this means that it has to resolve each value, furthermore it will reset the 'set' before and after.  An example would be `toArray`, or `contains`.  You can view it this way; lazy and evaluated functions work in parallel, you can lazily evaluate yourself through a set then perform an evaluated call on that set, and it will disregard the state of the lazy evaluation; however once you 'evaluate' a function it will reset any lazy execution as while they are parallel they aren't inclusive.  Maybe later on we can preserve state, for now we don't.

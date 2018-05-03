@@ -93,6 +93,8 @@ test "Basic Lazy" {
         i += 1;
     }
     std.debug.assert(i == 2);
+    std.debug.assert(it.contains(2));
+    std.debug.assert(?? it.next() == 0);
 
     var stringBuf: [3]u8 = undefined;
     std.debug.assert(std.mem.eql(u8, init(obj[0..]).select(u8, toDigitChar).toArray(stringBuf[0..]), "012"));

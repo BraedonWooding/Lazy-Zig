@@ -16,7 +16,7 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type, filter: fn(BaseT
         }
 
         pub fn reset(self: &Self) void {
-            nextIt.reset();
+            self.nextIt.reset();
         }
     };
 }

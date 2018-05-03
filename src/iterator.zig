@@ -13,9 +13,8 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return self.nextIt.next();
         }
 
-        pub fn reset(self: &Self) &Self {
+        pub fn reset(self: &Self) void {
             self.nextIt.reset();
-            return self;
         }
 
         pub fn where(self: &Self, comptime filter: fn (BaseType) bool) iterator(BaseType, whereIt(BaseType, ItType, filter)) {
@@ -37,13 +36,38 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             };
         }
 
+        pub fn contains(self: &Self, value: BaseType) bool {
+            self.reset();
+            var isTrue = false;
+            while (self.next()) |nxt| {
+                if (nxt == value) {
+                    isTrue = true;
+                    break;
+                }
+            }
+            self.reset();
+            return isTrue;
+        }
+
         pub fn toArray(self: &Self, buffer: []BaseType) []BaseType {
+            self.reset();
             var count: usize = 0;
             while (self.next()) |nxt| {
                 buffer[count] = nxt;
                 count += 1;
             }
+            self.reset();
             return buffer[0..count];
+        }
+
+        pub fn toList(self: &Self, allocator: &std.mem.Allocator) std.ArrayList(BaseType) {
+            self.reset();
+            var list = std.ArrayList(BaseType).init(allocator);
+            while (self.next()) |nxt| {
+                list.append(nxt);
+            }
+            self.reset();
+            return list;
         }
     };
 }
