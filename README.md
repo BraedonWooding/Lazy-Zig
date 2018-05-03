@@ -20,7 +20,7 @@ fn pow(val: i32) i32 {
 }
 
 fn main() void {
-    // Lets create our objects using LIZQ
+    // Lets create our objects using lazy
     // Enumerate goes over a range
     var it = Lazy.enumerate(0, 100, 1);
     // Next we want to do a 'where' to select what we want to
@@ -51,7 +51,12 @@ fn main() void {
         warn("{}", array[i]);
     }
     // Note: you could also just put all the iterators into a single line like;
-    var it = lizq.enumerate(0, 100, 1).where(even).select(pow);
+    var it = lazy.enumerate(0, 100, 1).where(even).select(pow);
+
+    // You could also just create it from an array already existing
+    var array = []i32 { 1, 2, 5, };
+    var it = lazy.init(array).where(even).select(pow);
+    // Works with hash_map, and array_list in std
 }
 ```
 
@@ -59,6 +64,6 @@ fn main() void {
 
 Just import the index like `const Lazy = @import("Lazy/index.zig");` and use like `Lazy.init(...)`. When a package manager comes along it will be different :).
 
-## 'LIZQ' Iterators vs 'Arrays'
+## 'Lazy' Iterators vs 'Arrays'
 
-Lizq iterators effectively allow us to 'yield' which basically just formulates a state machine around your code, figuring out the next step as you go.  To initialise a lizq iterator you just call `Lazy.init(array)`, and then you can perform whatever you want to the array, then to cast it back if you wish you can either call `.toArray(buffer)` (giving a buffer), or `.toArray(allocator)` (giving an allocator).
+Lazy iterators effectively allow us to 'yield' which basically just formulates a state machine around your code, figuring out the next step as you go.  To initialise a lazy iterator you just call `Lazy.init(array)`, and then you can perform whatever you want to the array, then to cast it back if you wish you can either call `.toArray(buffer)` (giving a buffer), or `.toArray(allocator)` (giving an allocator).
