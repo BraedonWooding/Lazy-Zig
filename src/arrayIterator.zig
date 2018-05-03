@@ -15,6 +15,10 @@ pub fn iterator(comptime BaseType: type) type {
             };
         }
 
+        pub fn reset(self: &Self) void {
+            self.state = 0;
+        }
+
         pub fn next(self: &Self) ?BaseType {
             if (self.state >= self.raw.len) return null;
 
