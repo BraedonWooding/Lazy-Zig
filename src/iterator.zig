@@ -5,6 +5,10 @@ const selectIt = @import("select.zig").iterator;
 const castIt = @import("cast.zig").iterator;
 const orderIt = @import("order.zig").iterator;
 const thenByIt = @import("thenBy.zig").iterator;
+const skipIt = @import("skip.zig").iterator;
+const skipWhileIt = @import("skipWhile.zig").iterator;
+const takeIt = @import("take.zig").iterator;
+const takeWhileIt = @import("takeWhile.zig").iterator;
 
 pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
     return struct {
@@ -157,6 +161,22 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
                 }
             }
             return false;
+        }
+
+        pub fn take(self: &Self, comptime amount: usize) iterator(BaseType, takeIt(BaseType, amount)) {
+            return self.returnBasedOnThis(BaseType, takeIt(BaseType, amount));
+        }
+
+        pub fn takeWhile(self: &Self, comptime condition: fn(BaseType) bool) iterator(BaseType, takeWhileIt(BaseType, condition)) {
+            return self.returnBasedOnThis(BaseType, takeWhileIt(BaseType, condition));
+        }
+
+        pub fn skip(self: &Self, comptime amount: usize) iterator(BaseType, skipIt(BaseType, amount)) {
+            return self.returnBasedOnThis(BaseType, skipIt(BaseType, amount));
+        }
+
+        pub fn skipWhile(self: &Self, comptime condition: fn(BaseType) bool) iterator(BaseType, skipWhileIt(BaseType, condition)) {
+            return self.returnBasedOnThis(BaseType, skipWhileIt(BaseType, condition));
         }
 
         pub fn toArray(self: &Self, buffer: []BaseType) []BaseType {

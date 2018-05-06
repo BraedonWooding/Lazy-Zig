@@ -11,7 +11,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
         }
 
         pub fn next(self: &Self) ?NewType {
-            while (self.nextIt.next()) |nxt| {
+            if (self.nextIt.next()) |nxt| {
                 return NewType(nxt);
             }
             return null;
