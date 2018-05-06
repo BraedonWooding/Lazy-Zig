@@ -18,5 +18,9 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type, filter: fn(BaseT
         pub fn reset(self: &Self) void {
             self.nextIt.reset();
         }
+
+        pub fn count(self: &Self) i32 {
+            return self.nextIt.count();
+        }
     };
 }

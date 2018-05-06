@@ -15,6 +15,10 @@ pub fn iterator(comptime BaseType: type) type {
             };
         }
 
+        pub fn count(self: &Self) i32 {
+            return raw.len;
+        }
+
         pub fn reset(self: &Self) void {
             self.state = 0;
         }

@@ -100,6 +100,13 @@ test "Basic Lazy" {
     std.debug.assert(std.mem.eql(u8, init(obj[0..]).select(u8, toDigitChar).toArray(stringBuf[0..]), "012"));
 }
 
+test "Basic Cast" {
+    var obj = []i32 { 0, 1, 2 };
+    const result = []u8 { 0, 1, 2 };
+    var buf: [3]u8 = undefined;
+    std.debug.assert(std.mem.eql(u8, init(obj[0..]).cast(u8).toArray(buf[0..]), result[0..]));
+}
+
 test "Basic Lazy_List" {
     // var list = std.ArrayList(i32).init(std.debug.global_allocator);
     // defer list.deinit();
