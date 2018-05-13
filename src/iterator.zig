@@ -9,6 +9,8 @@ const skipIt = @import("skip.zig").iterator;
 const skipWhileIt = @import("skipWhile.zig").iterator;
 const takeIt = @import("take.zig").iterator;
 const takeWhileIt = @import("takeWhile.zig").iterator;
+const concatIt = @import("concat.zig").iterator;
+const selectManyIt = @import("selectMany.zig").iterator;
 
 pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
     return struct {
@@ -119,7 +121,10 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return performTransform(func, false);
         }
 
-        // SelectMany?
+        // Select many currently only supports arrays
+        pub fn selectMany(self: &Self, comptime NewType: type, comptime filter: fn(BaseType) []const NewType) iterator(NewType, selectManyIt(BaseType, NewType, ItType, filter)) {
+            return self.returnBasedOnThis(NewType, selectManyIt(BaseType, NewType, ItType, filter));
+        }
 
         // Currently requires you to give a new type, since can't have 'var' return type.
         pub fn select(self: &Self, comptime NewType: type, comptime filter: fn(BaseType) NewType) iterator(NewType, selectIt(BaseType, NewType, ItType, filter)) {
@@ -177,6 +182,15 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
 
         pub fn skipWhile(self: &Self, comptime condition: fn(BaseType) bool) iterator(BaseType, skipWhileIt(BaseType, condition)) {
             return self.returnBasedOnThis(BaseType, skipWhileIt(BaseType, condition));
+        }
+
+        pub fn concat(self: &Self, other: &Self) iterator(BaseType, concatIt(BaseType, ItType)) {
+            return iterator(BaseType, concatIt(BaseType, ItType)) {
+                .nextIt = concatIt(BaseType, ItType) {
+                    .nextIt = &self.nextIt,
+                    .otherIt = &other.nextIt,
+                },
+            };
         }
 
         pub fn toArray(self: &Self, buffer: []BaseType) []BaseType {

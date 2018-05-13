@@ -22,17 +22,17 @@ fn pow(val: i32) i32 {
 fn main() void {
     // Lets create our objects using lazy
     // Enumerate goes over a range
-    var it = Lazy.enumerate(0, 100, 1);
+    var it = lazy.range(i32(0), 100, 1);
     // Next we want to do a 'where' to select what we want to
-    it = it.where(even);
+    var whereIt = it.where(even);
     // Then we want to do a 'select' to do a power operation
-    it = it.select(pow);
+    var selectIt = whereIt.select(i32, pow);
     // Finally we want to go through each item and print them
     // like; 4, 16, ...
-    if (it.next()) |next| {
-        warn("{}");
+    if (selectIt.next()) |next| {
+        warn("{}", next);
     }
-    for (it.next()) |next| {
+    while (selectIt.next()) |next| {
         warn(", {}", next);
     }
     warn("\n");
@@ -41,22 +41,22 @@ fn main() void {
     // first lets reset it to the beginning;
     // NOTE: it keeps all the operations you performed on it
     // just resets the laziness.
-    it.reset();
-    var buf: [100]i32 = 0;
+    selectIt.reset();
+    var buf: [100]i32 = undefined;
     // Lets turn it into an array
     // In this case we didn't have to reset, as the array automatically does
-    var array = it.toArray(buf);
+    var array = selectIt.toArray(buf[0..]);
     var i: usize = 0;
     while (i < array.len) : (i += 1) {
         if (i > 0) warn(", ");
         warn("{}", array[i]);
     }
     // Note: you could also just put all the iterators into a single line like;
-    var it = lazy.enumerate(0, 100, 1).where(even).select(pow);
+    var rangeIt = lazy.range(0, 100, 1).where(even).select(pow);
 
     // You could also just create it from an array already existing
-    var array = []i32 { 1, 2, 5, };
-    var it = lazy.init(array).where(even).select(pow);
+    array = []i32 { 1, 2, 5, };
+    it = lazy.init(array).where(even).select(pow);
     // Works with hash_map, and array_list in std
 }
 ```

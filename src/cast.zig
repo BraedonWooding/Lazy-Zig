@@ -6,7 +6,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
 
         const Self = this;
 
-        pub fn count(self: &Self) i32 {
+        pub fn count(self: &Self) usize {
             return self.nextIt.count();
         }
 

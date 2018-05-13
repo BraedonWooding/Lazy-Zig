@@ -15,7 +15,7 @@ pub fn iterator(comptime BaseType: type) type {
             };
         }
 
-        pub fn count(self: &Self) i32 {
+        pub fn count(self: &Self) usize {
             return raw.len;
         }
 

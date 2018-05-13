@@ -1,83 +1,19 @@
 const std = @import("std");
 const arrayIt = @import("src/arrayIterator.zig").iterator;
 const iterator = @import("src/iterator.zig").iterator;
+const enumerateIt = @import("src/enumerate.zig").iterator;
 const TypeId = @import("builtin").TypeId;
 const mem = std.mem;
+const info = @import("src/info.zig");
 
-const Info = enum {
-    Slice,
-    Iterator,
-};
-
-fn getInfo(comptime objType: type) Info {
-    comptime {
-        const count = @memberCount(objType);
-        var i = 0;
-
-        inline while (i < count) : (i += 1) {
-            if (mem.eql(u8, @memberName(objType, i), "iterator")) {
-                return Info.Iterator;
-            }
-        }
-
-        return Info.Slice;
-    }
+pub fn init(obj: var) info.getType(@typeOf(obj)) {
+    return info.initType(@typeOf(obj), obj);
 }
 
-fn getType(comptime objType: type) type {
-    comptime {
-        if (@typeId(objType) == TypeId.Pointer) {
-            return getType(objType.Child);
-        }
-
-        if (@typeId(objType) != TypeId.Struct) {
-            @compileError("Can only use slices and structs have 'iterator' function, remember to convert arrays to slices.");
-        }
-
-        switch (getInfo(objType)) {
-            Info.Slice => {
-                const BaseType = objType.Child;
-                return iterator(BaseType, arrayIt(BaseType));
-            },
-            Info.Iterator => {
-                const it_type = @typeOf(objType.iterator);
-                const return_type = it_type.next.ReturnType;
-                return findTillNoChild(return_type);
-            }
-        }
-
-        @compileError("No 'iterator' or 'Child' property found");
-    }
-}
-
-fn findTillNoChild(comptime Type: type) type {
-    if (@typeId(Type) == TypeId.Nullable) {
-        return findTillNoChild(Type.Child);
-    }
-    return Type;
-}
-
-fn initType(comptime objType: type, value: var) getType(objType) {
-    comptime const it_type = getType(objType);
-    switch (comptime getInfo(objType)) {
-        Info.Slice => {
-            return it_type {
-                .nextIt = arrayIt(objType.Child).init(value),
-            };
-        },
-        Info.Iterator => {
-            return it_type {
-                .nextIt = value.iterator(),
-            };
-        },
-        else => {
-            unreachable;
-        },
-    }
-}
-
-pub fn init(obj: var) getType(@typeOf(obj)) {
-    return initType(@typeOf(obj), obj);
+pub fn range(start: var, stop: @typeOf(start), step: @typeOf(start)) iterator(@typeOf(start), enumerateIt(@typeOf(start))) {
+    return iterator(@typeOf(start), enumerateIt(@typeOf(start))) {
+        .nextIt = enumerateIt(@typeOf(start)).init(start, stop, step),
+    };
 }
 
 test "Basic Lazy" {
@@ -100,11 +36,69 @@ test "Basic Lazy" {
     std.debug.assert(std.mem.eql(u8, init(obj[0..]).select(u8, toDigitChar).toArray(stringBuf[0..]), "012"));
 }
 
+fn pow(val: i32) i32 {
+    return val * val;
+}
+
+test "Readme-Tests" {
+    const warn = std.debug.warn;
+    const assert = std.debug.assert;
+
+    var it = range(i32(0), 100, 1);
+    var whereIt = it.where(even);
+    var selectIt = whereIt.select(i32, pow);
+
+    var outBuf: [100]i32 = undefined;
+    _ = range(i32(0), 100, 2).toArray(outBuf[0..]);
+    var i: usize = 0;
+    if (selectIt.next()) |next| {
+        assert(next ==  pow(outBuf[i]));
+        i += 1;
+    }
+    while (selectIt.next()) |next| {
+        assert(next == pow(outBuf[i]));
+        i += 1;
+    }
+
+    selectIt.reset();
+    var buf: [100]i32 = undefined;
+    var array = selectIt.toArray(buf[0..]);
+    i = 0;
+    while (i < array.len) : (i += 1) {
+        assert(array[i] == pow(outBuf[i]));
+    }
+}
+
+test "Basic Concat" {
+    var obj1 = []i32 { 0, 1, 2, };
+    var obj2 = []i32 { 3, 4, 5, 6, };
+    var i: i32 = 0;
+    var it = init(obj1[0..]).concat(&init(obj2[0..]));
+    while (it.next()) |next| {
+        std.debug.assert(next == i);
+        i += 1;
+    }
+}
+
 test "Basic Cast" {
     var obj = []i32 { 0, 1, 2 };
     const result = []u8 { 0, 1, 2 };
     var buf: [3]u8 = undefined;
     std.debug.assert(std.mem.eql(u8, init(obj[0..]).cast(u8).toArray(buf[0..]), result[0..]));
+}
+
+fn selectManyTest(arr: []const i32) []const i32 {
+    return arr;
+}
+
+test "Select Many" {
+    var obj = [][]const i32 { ([]i32{ 0, 1 })[0..], ([]i32{ 2, 3 })[0..], ([]i32{ 4, 5 })[0..] };
+    var i: i32 = 0;
+    var it = init(obj[0..]).selectMany(i32, selectManyTest);
+    while (it.next()) |next| {
+        std.debug.assert(i == next);
+        i += 1;
+    }
 }
 
 test "Basic Lazy_List" {
