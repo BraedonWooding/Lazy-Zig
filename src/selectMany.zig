@@ -1,39 +1,33 @@
 const std = @import("std");
-const info = @import("info");
+const info = @import("info.zig");
+const arrayIt = @import("arrayIterator.zig").iterator;
 
 pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType: type, select: fn(BaseType) []const NewType) type {
     return struct {
         nextIt: &ItType,
-
-        var currentIt: ?ItType = null;
+        currentIt: ?arrayIt(NewType),
         const Self = this;
 
         pub fn next(self: &Self) ?NewType {
-            if (currentIt) |it| {
+            if (self.currentIt) |it| {
                 if (it.next()) |nxt| {
                     return nxt;
                 } else {
-                    currentIt = null;
+                    self.currentIt = null;
                 }
             }
 
             if (self.nextIt.next()) |nxt| {
                 var val = select(nxt);
-                comptime const typeInfo = info.getInfo(@typeOf(val));
-                if (typeInfo == info.Other) { 
-                    return val;
-                }
-                else {
-                    currentIt = info.initType(@typeOf(val), val);
-                    return self.next();
-                }
+                self.currentIt = arrayIt(NewType).init(val);
+                return self.next();
             }
             return null;
         }
 
         pub fn reset(self: &Self) void {
             self.nextIt.reset();
-            currentIt = null;
+            self.currentIt = null;
         }
 
         pub fn count(self: &Self) i32 {

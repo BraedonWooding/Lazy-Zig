@@ -13,6 +13,10 @@ const Info = enum {
 
 pub fn getInfo(comptime objType: type) Info {
     comptime {
+        if (@typeId(objType) == TypeId.Slice) {
+            return Info.Slice;
+        }
+        
         if (@typeId(objType) != TypeId.Struct) {
             return Info.Other;
         }
@@ -26,7 +30,7 @@ pub fn getInfo(comptime objType: type) Info {
             }
         }
 
-        return Info.Slice;
+        return Info.Other;
     }
 }
 

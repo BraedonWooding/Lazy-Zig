@@ -123,7 +123,12 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
 
         // Select many currently only supports arrays
         pub fn selectMany(self: &Self, comptime NewType: type, comptime filter: fn(BaseType) []const NewType) iterator(NewType, selectManyIt(BaseType, NewType, ItType, filter)) {
-            return self.returnBasedOnThis(NewType, selectManyIt(BaseType, NewType, ItType, filter));
+            return iterator(NewType, selectManyIt(BaseType, NewType, ItType, filter)) {
+                .nextIt = selectManyIt(BaseType, NewType, ItType, filter) {
+                    .nextIt = &self.nextIt,
+                    .currentIt = null,
+                },
+            };
         }
 
         // Currently requires you to give a new type, since can't have 'var' return type.
