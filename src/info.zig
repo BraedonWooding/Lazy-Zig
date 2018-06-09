@@ -16,7 +16,7 @@ pub fn getInfo(comptime objType: type) Info {
         if (@typeId(objType) == TypeId.Slice) {
             return Info.Slice;
         }
-        
+
         if (@typeId(objType) != TypeId.Struct) {
             return Info.Other;
         }
@@ -52,7 +52,7 @@ pub fn getType(comptime objType: type) type {
             },
             Info.Other => {
                 @compileError("Can only use slices and structs have 'iterator' function, remember to convert arrays to slices.");
-            }
+            },
         }
 
         @compileError("No 'iterator' or 'Child' property found");
@@ -70,14 +70,10 @@ pub fn initType(comptime objType: type, value: var) getType(objType) {
     comptime const it_type = getType(objType);
     switch (comptime getInfo(objType)) {
         Info.Slice => {
-            return it_type {
-                .nextIt = arrayIt(objType.Child).init(value),
-            };
+            return it_type{ .nextIt = arrayIt(objType.Child).init(value) };
         },
         Info.Iterator => {
-            return it_type {
-                .nextIt = value.iterator(),
-            };
+            return it_type{ .nextIt = value.iterator() };
         },
         else => {
             unreachable;

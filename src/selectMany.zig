@@ -2,14 +2,14 @@ const std = @import("std");
 const info = @import("info.zig");
 const arrayIt = @import("arrayIterator.zig").iterator;
 
-pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType: type, select: fn(BaseType) []const NewType) type {
+pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType: type, select: fn (BaseType) []const NewType) type {
     return struct {
-        nextIt: &ItType,
+        nextIt: *ItType,
         currentIt: ?arrayIt(NewType),
         const Self = this;
 
-        pub fn next(self: &Self) ?NewType {
-            if (self.currentIt) |it| {
+        pub fn next(self: *Self) ?NewType {
+            if (self.currentIt) |*it| {
                 if (it.next()) |nxt| {
                     return nxt;
                 } else {
@@ -25,12 +25,12 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
             return null;
         }
 
-        pub fn reset(self: &Self) void {
+        pub fn reset(self: *Self) void {
             self.nextIt.reset();
             self.currentIt = null;
         }
 
-        pub fn count(self: &Self) i32 {
+        pub fn count(self: *Self) usize {
             @compileError("Can't use count on select many");
         }
     };

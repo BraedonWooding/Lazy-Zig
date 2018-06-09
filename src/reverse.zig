@@ -2,35 +2,39 @@ const std = @import("std");
 const iteratorIt = @import("iterator.zig");
 const sort = std.sort.sort;
 
-pub fn iterator(comptime BaseType: type, buf: []BaseType) type {
+pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
     return struct {
         const Self = this;
-        nextIt: &ItType,
-        
-        var index: usize = 0;
-        var count: usize = 0;
+        nextIt: *ItType,
+        index: usize,
+        count: usize,
+        buf: []BaseType,
 
-        pub fn next(self: &Self) ?BaseType {
-            if (count == 0) {
+        pub fn next(self: *Self) ?BaseType {
+            if (self.count == 0) {
                 // Sort
                 var i: usize = 0;
-                while (nextIt.next()) |nxt| {
-                    buf[i] = nxt;
+                while (self.nextIt.next()) |nxt| {
+                    self.buf[i] = nxt;
                     i += 1;
                 }
 
-                count = i;
-                index = count - 1;
+                self.count = i;
+                self.index = self.count;
             }
-
-            if (index < 0) return null;
-
-            defer index -= 1;
-            return buf[index];
+            if (self.index == 0) {
+                return null;
+            } else {
+                defer self.index -= 1;
+                return self.buf[self.index - 1];
+            }
         }
 
-        pub fn reset(self: &Self) void {
+        pub fn reset(self: *Self) void {
+            // maybe just reset count??
             self.nextIt.reset();
+            self.count = 0;
+            self.index = 0;
         }
     };
 }

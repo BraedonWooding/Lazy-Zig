@@ -2,16 +2,16 @@ const std = @import("std");
 
 pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
     return struct {
-        nextIt: &ItType,
-        otherIt: &ItType,
+        nextIt: *ItType,
+        otherIt: *ItType,
 
         const Self = this;
 
-        pub fn count(self: &Self) i32 {
+        pub fn count(self: *Self) i32 {
             return self.nextIt.count() + self.otherIt.count();
         }
 
-        pub fn next(self: &Self) ?BaseType {
+        pub fn next(self: *Self) ?BaseType {
             if (self.nextIt.next()) |nxt| {
                 return nxt;
             } else if (self.otherIt.next()) |nxt| {
@@ -20,7 +20,7 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return null;
         }
 
-        pub fn reset(self: &Self) void {
+        pub fn reset(self: *Self) void {
             self.nextIt.reset();
         }
     };

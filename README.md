@@ -1,4 +1,5 @@
 # Lazily-Zig (Lazy)
+
 Basically Linq in Zig.
 
 Provides just a ton of really nice LINQ like commands, these can be applied on any array.  Will also support iterators in the future.
@@ -6,7 +7,9 @@ Provides just a ton of really nice LINQ like commands, these can be applied on a
 ## Example Code
 
 Lets say you want to get all the even values in an array;
+
 ```Java
+
 const Lazy = @import("Lazy/index.zig");
 const warn = @import("std").debug.warn;
 

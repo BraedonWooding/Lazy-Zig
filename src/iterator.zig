@@ -4,13 +4,13 @@ const whereIt = @import("where.zig").iterator;
 const selectIt = @import("select.zig").iterator;
 const castIt = @import("cast.zig").iterator;
 const orderIt = @import("order.zig").iterator;
-const thenByIt = @import("thenBy.zig").iterator;
 const skipIt = @import("skip.zig").iterator;
 const skipWhileIt = @import("skipWhile.zig").iterator;
 const takeIt = @import("take.zig").iterator;
 const takeWhileIt = @import("takeWhile.zig").iterator;
 const concatIt = @import("concat.zig").iterator;
 const selectManyIt = @import("selectMany.zig").iterator;
+const reverseIt = @import("reverse.zig").iterator;
 
 pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
     return struct {
@@ -18,27 +18,25 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
 
         const Self = this;
 
-        pub fn next(self: &Self) ?BaseType {
+        pub fn next(self: *Self) ?BaseType {
             return self.nextIt.next();
         }
 
-        pub fn reset(self: &Self) void {
+        pub fn reset(self: *Self) void {
             self.nextIt.reset();
         }
 
-        pub fn count(self: &Self) i32 {
+        pub fn count(self: *Self) i32 {
             return self.nextIt.count();
         }
 
-        fn returnBasedOnThis(self: &Self, comptime TypeA: type, comptime TypeB: type) iterator(TypeA, TypeB) {
-            return iterator(TypeA, TypeB) {
-                .nextIt = TypeB {
-                    .nextIt = &self.nextIt,
-                },
+        fn returnBasedOnThis(self: *Self, comptime TypeA: type, comptime TypeB: type) iterator(TypeA, TypeB) {
+            return iterator(TypeA, TypeB){
+                .nextIt = TypeB{ .nextIt = &self.nextIt },
             };
         }
 
-        pub fn where(self: &Self, comptime filter: fn (BaseType) bool) iterator(BaseType, whereIt(BaseType, ItType, filter)) {
+        pub fn where(self: *Self, comptime filter: fn (BaseType) bool) iterator(BaseType, whereIt(BaseType, ItType, filter)) {
             return self.returnBasedOnThis(BaseType, whereIt(BaseType, ItType, filter));
         }
 
@@ -46,12 +44,12 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return a + b;
         }
 
-        pub fn sum(self: &Self) ?BaseType {
+        pub fn sum(self: *Self) ?BaseType {
             return self.aggregate(add);
         }
 
-        fn compare(self: &Self, comptime comparer: fn(BaseType, BaseType) i32, comptime result: i32) ?BaseType {
-            var maxValue : ?BaseType = null;
+        fn compare(self: *Self, comptime comparer: fn (BaseType, BaseType) i32, comptime result: i32) ?BaseType {
+            var maxValue: ?BaseType = null;
             self.reset();
             defer self.reset();
 
@@ -63,35 +61,48 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return maxValue;
         }
 
-        pub fn max(self: &Self, comptime comparer: fn(BaseType, BaseType) i32) ?BaseType {
+        pub fn max(self: *Self, comptime comparer: fn (BaseType, BaseType) i32) ?BaseType {
             return self.compare(comparer, 1);
         }
 
-        pub fn min(self: &Self, comptime comparer: fn(BaseType, BaseType) i32) ?BaseType {
+        pub fn min(self: *Self, comptime comparer: fn (BaseType, BaseType) i32) ?BaseType {
             return self.compare(comparer, -1);
         }
 
-        pub fn reverse(self: &Self, buf: []BaseType) iterator(Type, reverseIt(BaseType, buf)) {
-            return self.returnBasedOnThis(BaseType, reverseIt(BaseType, buf));
+        pub fn reverse(self: *Self, buf: []BaseType) iterator(BaseType, reverseIt(BaseType, ItType)) {
+            return iterator(BaseType, reverseIt(BaseType, ItType)){
+                .nextIt = reverseIt(BaseType, ItType){
+                    .nextIt = &self.nextIt,
+                    .index = 0,
+                    .count = 0,
+                    .buf = buf,
+                },
+            };
         }
 
-        pub fn thenByDescending(self: &Self, comptime NewType: type, comptime comparerObject: fn(BaseType) NewType, buf: []BaseType) iterator(NewType, thenByIt(BaseType, NewType, false, comparerObject, buf)) {
-            return self.returnBasedOnThis(BaseType, thenByIt(BaseType, NewType, false, comparerObject, buf));
+        pub fn orderByDescending(self: *Self, comptime NewType: type, comptime selectObj: fn (BaseType) NewType, buf: []BaseType) iterator(NewType, orderIt(BaseType, NewType, ItType, false, selectObj)) {
+            return iterator(NewType, orderIt(BaseType, NewType, ItType, false, selectObj)){
+                .nextIt = orderIt(BaseType, NewType, ItType, false, selectObj){
+                    .nextIt = &self.nextIt,
+                    .index = 0,
+                    .count = 0,
+                    .buf = buf,
+                },
+            };
         }
 
-        pub fn thenByAscending(self: &Self, comptime NewType: type, comptime comparerObject: fn(BaseType) NewType, buf: []BaseType) iterator(NewType, thenByIt(BaseType, NewType, true, comparerObject, buf)) {
-            return self.returnBasedOnThis(BaseType, thenByIt(BaseType, NewType, true, comparerObject, buf));
+        pub fn orderByAscending(self: *Self, comptime NewType: type, comptime selectObj: fn (BaseType) NewType, buf: []BaseType) iterator(NewType, orderIt(BaseType, NewType, ItType, true, selectObj)) {
+            return iterator(NewType, orderIt(BaseType, NewType, ItType, true, selectObj)){
+                .nextIt = orderIt(BaseType, NewType, ItType, true, selectObj){
+                    .nextIt = &self.nextIt,
+                    .index = 0,
+                    .count = 0,
+                    .buf = buf,
+                },
+            };
         }
 
-        pub fn orderByDescending(self: &Self, comptime NewType: type, comptime comparerObject: fn(BaseType) NewType, buf: []BaseType) iterator(NewType, orderIt(BaseType, NewType, false, comparerObject, buf)) {
-            return self.returnBasedOnThis(BaseType, orderIt(BaseType, NewType, false, comparerObject, buf));
-        }
-
-        pub fn orderByAscending(self: &Self, comptime NewType: type, comptime comparerObject: fn(BaseType) NewType, buf: []BaseType) iterator(NewType, orderIt(BaseType, NewType, true, comparerObject, buf)) {
-            return self.returnBasedOnThis(BaseType, orderIt(BaseType, NewType, true, comparerObject, buf));
-        }
-
-        fn performTransform(self: &Self, comptime func: fn(BaseType, BaseType) BaseType, comptime average: bool) ?BaseType {
+        fn performTransform(self: *Self, comptime func: fn (BaseType, BaseType) BaseType, comptime average: bool) ?BaseType {
             var aggregate: ?BaseType = null;
             self.reset();
             defer self.reset();
@@ -105,26 +116,26 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
                     aggregate = func(aggregate, nxt);
                 }
             }
-            
+
             if (aggregate and average) |agg| {
-                return agg/cnt;
+                return agg / cnt;
             } else {
                 return aggregate;
             }
         }
 
-        pub fn average(self: &Self, comptime func: fn(BaseType, BaseType) BaseType) ?BaseType {
+        pub fn average(self: *Self, comptime func: fn (BaseType, BaseType) BaseType) ?BaseType {
             return performTransform(func, true);
         }
 
-        pub fn aggregate(self: &Self, comptime func: fn(BaseType, BaseType) BaseType) ?BaseType {
+        pub fn aggregate(self: *Self, comptime func: fn (BaseType, BaseType) BaseType) ?BaseType {
             return performTransform(func, false);
         }
 
         // Select many currently only supports arrays
-        pub fn selectMany(self: &Self, comptime NewType: type, comptime filter: fn(BaseType) []const NewType) iterator(NewType, selectManyIt(BaseType, NewType, ItType, filter)) {
-            return iterator(NewType, selectManyIt(BaseType, NewType, ItType, filter)) {
-                .nextIt = selectManyIt(BaseType, NewType, ItType, filter) {
+        pub fn selectMany(self: *Self, comptime NewType: type, comptime filter: fn (BaseType) []const NewType) iterator(NewType, selectManyIt(BaseType, NewType, ItType, filter)) {
+            return iterator(NewType, selectManyIt(BaseType, NewType, ItType, filter)){
+                .nextIt = selectManyIt(BaseType, NewType, ItType, filter){
                     .nextIt = &self.nextIt,
                     .currentIt = null,
                 },
@@ -132,15 +143,15 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
         }
 
         // Currently requires you to give a new type, since can't have 'var' return type.
-        pub fn select(self: &Self, comptime NewType: type, comptime filter: fn(BaseType) NewType) iterator(NewType, selectIt(BaseType, NewType, ItType, filter)) {
+        pub fn select(self: *Self, comptime NewType: type, comptime filter: fn (BaseType) NewType) iterator(NewType, selectIt(BaseType, NewType, ItType, filter)) {
             return self.returnBasedOnThis(NewType, selectIt(BaseType, NewType, ItType, filter));
         }
 
-        pub fn cast(self: &Self, comptime NewType: type) iterator(NewType, castIt(BaseType, NewType, ItType)) {
+        pub fn cast(self: *Self, comptime NewType: type) iterator(NewType, castIt(BaseType, NewType, ItType)) {
             return self.returnBasedOnThis(NewType, castIt(BaseType, NewType, ItType));
         }
 
-        pub fn all(self: &Self, comptime condition: fn(BaseType) bool) bool {
+        pub fn all(self: *Self, comptime condition: fn (BaseType) bool) bool {
             self.reset();
             defer self.reset();
             while (self.next()) |nxt| {
@@ -151,7 +162,7 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return true;
         }
 
-        pub fn any(self: &Self, comptime condition: fn(BaseType) bool) bool {
+        pub fn any(self: *Self, comptime condition: fn (BaseType) bool) bool {
             self.reset();
             defer self.reset();
             while (self.next()) |nxt| {
@@ -162,7 +173,7 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return false;
         }
 
-        pub fn contains(self: &Self, value: BaseType) bool {
+        pub fn contains(self: *Self, value: BaseType) bool {
             self.reset();
             defer self.reset();
             while (self.next()) |nxt| {
@@ -173,32 +184,32 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return false;
         }
 
-        pub fn take(self: &Self, comptime amount: usize) iterator(BaseType, takeIt(BaseType, amount)) {
+        pub fn take(self: *Self, comptime amount: usize) iterator(BaseType, takeIt(BaseType, amount)) {
             return self.returnBasedOnThis(BaseType, takeIt(BaseType, amount));
         }
 
-        pub fn takeWhile(self: &Self, comptime condition: fn(BaseType) bool) iterator(BaseType, takeWhileIt(BaseType, condition)) {
+        pub fn takeWhile(self: *Self, comptime condition: fn (BaseType) bool) iterator(BaseType, takeWhileIt(BaseType, condition)) {
             return self.returnBasedOnThis(BaseType, takeWhileIt(BaseType, condition));
         }
 
-        pub fn skip(self: &Self, comptime amount: usize) iterator(BaseType, skipIt(BaseType, amount)) {
+        pub fn skip(self: *Self, comptime amount: usize) iterator(BaseType, skipIt(BaseType, amount)) {
             return self.returnBasedOnThis(BaseType, skipIt(BaseType, amount));
         }
 
-        pub fn skipWhile(self: &Self, comptime condition: fn(BaseType) bool) iterator(BaseType, skipWhileIt(BaseType, condition)) {
+        pub fn skipWhile(self: *Self, comptime condition: fn (BaseType) bool) iterator(BaseType, skipWhileIt(BaseType, condition)) {
             return self.returnBasedOnThis(BaseType, skipWhileIt(BaseType, condition));
         }
 
-        pub fn concat(self: &Self, other: &Self) iterator(BaseType, concatIt(BaseType, ItType)) {
-            return iterator(BaseType, concatIt(BaseType, ItType)) {
-                .nextIt = concatIt(BaseType, ItType) {
+        pub fn concat(self: *Self, other: *Self) iterator(BaseType, concatIt(BaseType, ItType)) {
+            return iterator(BaseType, concatIt(BaseType, ItType)){
+                .nextIt = concatIt(BaseType, ItType){
                     .nextIt = &self.nextIt,
                     .otherIt = &other.nextIt,
                 },
             };
         }
 
-        pub fn toArray(self: &Self, buffer: []BaseType) []BaseType {
+        pub fn toArray(self: *Self, buffer: []BaseType) []BaseType {
             self.reset();
             defer self.reset();
             var c: usize = 0;
@@ -209,7 +220,7 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return buffer[0..c];
         }
 
-        pub fn toList(self: &Self, allocator: &std.mem.Allocator) std.ArrayList(BaseType) {
+        pub fn toList(self: *Self, allocator: &std.mem.Allocator) std.ArrayList(BaseType) {
             self.reset();
             defer self.reset();
             var list = std.ArrayList(BaseType).init(allocator);

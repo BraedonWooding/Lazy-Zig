@@ -6,11 +6,11 @@ pub fn iterator(comptime BaseType: type) type {
         start: BaseType,
         end: BaseType,
         step: BaseType,
-        
+
         const Self = this;
 
         pub fn init(start: BaseType, end: BaseType, step: BaseType) Self {
-            return Self {
+            return Self{
                 .state = 0,
                 .start = start,
                 .end = end,
@@ -18,15 +18,15 @@ pub fn iterator(comptime BaseType: type) type {
             };
         }
 
-        pub fn count(self: &Self) usize {
+        pub fn count(self: *Self) usize {
             return (self.end - self.start - 1) / 2;
         }
 
-        pub fn reset(self: &Self) void {
+        pub fn reset(self: *Self) void {
             self.state = self.start;
         }
 
-        pub fn next(self: &Self) ?BaseType {
+        pub fn next(self: *Self) ?BaseType {
             if (self.state >= self.end) return null;
 
             self.state += self.step;

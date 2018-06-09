@@ -5,25 +5,25 @@ pub fn iterator(comptime BaseType: type) type {
     return struct {
         state: usize,
         raw: []const BaseType,
-        
+
         const Self = this;
 
         pub fn init(raw: []const BaseType) Self {
-            return Self {
+            return Self{
                 .state = 0,
                 .raw = raw,
             };
         }
 
-        pub fn count(self: &Self) usize {
+        pub fn count(self: *Self) usize {
             return raw.len;
         }
 
-        pub fn reset(self: &Self) void {
+        pub fn reset(self: *Self) void {
             self.state = 0;
         }
 
-        pub fn next(self: &Self) ?BaseType {
+        pub fn next(self: *Self) ?BaseType {
             if (self.state >= self.raw.len) return null;
 
             const value = self.raw[self.state];
