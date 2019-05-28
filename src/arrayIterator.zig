@@ -6,7 +6,7 @@ pub fn iterator(comptime BaseType: type) type {
         state: usize,
         raw: []const BaseType,
 
-        const Self = this;
+        const Self = @This();
 
         pub fn init(raw: []const BaseType) Self {
             return Self{

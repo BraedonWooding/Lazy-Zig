@@ -4,7 +4,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
     return struct {
         nextIt: *ItType,
 
-        const Self = this;
+        const Self = @This();
 
         pub fn next(self: *Self) ?NewType {
             if (self.nextIt.next()) |nxt| {

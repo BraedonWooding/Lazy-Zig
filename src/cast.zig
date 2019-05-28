@@ -4,7 +4,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
     return struct {
         nextIt: *ItType,
 
-        const Self = this;
+        const Self = @This();
 
         pub fn count(self: *Self) usize {
             return self.nextIt.count();

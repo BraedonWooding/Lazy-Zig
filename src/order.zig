@@ -4,7 +4,7 @@ const sort = std.sort.sort;
 
 pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType: type, comptime ascending: bool, comptime select: fn (BaseType) NewType) type {
     return struct {
-        const Self = this;
+        const Self = @This();
         nextIt: *ItType,
         index: usize,
         count: usize,
