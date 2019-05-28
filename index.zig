@@ -152,7 +152,7 @@ fn orderByEven(val: i32, other: i32) bool {
 }
 
 fn toDigitChar(val: i32) u8 {
-    return u8(val) + '0';
+    return @intCast(u8, val) + '0';
 }
 
 fn even(val: i32) bool {
