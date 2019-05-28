@@ -33,11 +33,11 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
             self.nextIt.reset();
         }
 
-        fn compare(a: *const BaseType, b: *const BaseType) bool {
+        fn compare(a: BaseType, b: BaseType) bool {
             if (ascending) {
-                return select(*a) < select(*b);
+                return select(a) < select(b);
             } else {
-                return select(*a) > select(*b);
+                return select(a) > select(b);
             }
         }
     };
