@@ -12,7 +12,10 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
 
         pub fn next(self: *Self) ?NewType {
             if (self.nextIt.next()) |nxt| {
-                return NewType(nxt);
+                comptime switch (@typeInfo(BaseType)) {
+                    .Int => return @intCast(NewType, nxt),
+                    else => return NewType(nxt),
+                };
             }
             return null;
         }
