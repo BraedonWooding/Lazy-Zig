@@ -6,7 +6,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
     return struct {
         nextIt: *ItType,
         currentIt: ?arrayIt(NewType),
-        const Self = this;
+        const Self = @This();
 
         pub fn next(self: *Self) ?NewType {
             if (self.currentIt) |*it| {

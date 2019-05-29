@@ -11,14 +11,10 @@ const Info = enum {
     Other,
 };
 
-pub fn getInfo(comptime objType: type) Info {
+pub fn hasIteratorMember(comptime objType: type) bool {
     comptime {
-        if (@typeId(objType) == TypeId.Slice) {
-            return Info.Slice;
-        }
-
         if (@typeId(objType) != TypeId.Struct) {
-            return Info.Other;
+            return false;
         }
 
         const count = @memberCount(objType);
@@ -26,35 +22,40 @@ pub fn getInfo(comptime objType: type) Info {
 
         inline while (i < count) : (i += 1) {
             if (mem.eql(u8, @memberName(objType, i), "iterator")) {
-                return Info.Iterator;
+                return true;
             }
         }
 
-        return Info.Other;
+        return false;
     }
 }
 
 pub fn getType(comptime objType: type) type {
     comptime {
-        if (@typeId(objType) == TypeId.Pointer) {
-            return getType(objType.Child);
-        }
-
-        switch (getInfo(objType)) {
-            Info.Slice => {
-                const BaseType = objType.Child;
-                return iterator(BaseType, arrayIt(BaseType));
+        switch (@typeInfo(objType)) {
+            TypeId.Pointer => |pointer| {
+                switch (pointer.size) {
+                    .One, .Many, .C => {
+                        return pointer.child;
+                    },
+                    .Slice => {
+                        const BaseType = pointer.child;
+                        return iterator(BaseType, arrayIt(BaseType));
+                    },
+                }
             },
-            Info.Iterator => {
+            TypeId.Struct => |structInfo| {
+                if (!hasIteratorMember(objType)) {
+                    @compileError("No 'iterator' or 'Child' property found");
+                }
                 const it_type = @typeOf(objType.iterator);
                 const return_type = it_type.next.ReturnType;
                 return findTillNoChild(return_type);
             },
-            Info.Other => {
+            else => {
                 @compileError("Can only use slices and structs have 'iterator' function, remember to convert arrays to slices.");
             },
         }
-
         @compileError("No 'iterator' or 'Child' property found");
     }
 }
@@ -68,15 +69,21 @@ pub fn findTillNoChild(comptime Type: type) type {
 
 pub fn initType(comptime objType: type, value: var) getType(objType) {
     comptime const it_type = getType(objType);
-    switch (comptime getInfo(objType)) {
-        Info.Slice => {
-            return it_type{ .nextIt = arrayIt(objType.Child).init(value) };
+    switch (@typeInfo(objType)) {
+        TypeId.Pointer => |pointer| {
+            switch (pointer.size) {
+                .Slice => {
+                    return it_type{ .nextIt = arrayIt(pointer.child).init(value) };
+                },
+                else => unreachable,
+            }
         },
-        Info.Iterator => {
+        TypeId.Struct => {
+            if (comptime !hasIteratorMember(objType)) {
+                unreachable;
+            }
             return it_type{ .nextIt = value.iterator() };
         },
-        else => {
-            unreachable;
-        },
+        else => unreachable,
     }
 }

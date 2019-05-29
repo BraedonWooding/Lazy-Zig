@@ -16,7 +16,7 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
     return struct {
         nextIt: ItType,
 
-        const Self = this;
+        const Self = @This();
 
         pub fn next(self: *Self) ?BaseType {
             return self.nextIt.next();
@@ -220,7 +220,7 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return buffer[0..c];
         }
 
-        pub fn toList(self: *Self, allocator: &std.mem.Allocator) std.ArrayList(BaseType) {
+        pub fn toList(self: *Self, allocator: *std.mem.Allocator) std.ArrayList(BaseType) {
             self.reset();
             defer self.reset();
             var list = std.ArrayList(BaseType).init(allocator);

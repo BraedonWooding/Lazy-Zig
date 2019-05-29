@@ -7,7 +7,7 @@ pub fn iterator(comptime BaseType: type) type {
         end: BaseType,
         step: BaseType,
 
-        const Self = this;
+        const Self = @This();
 
         pub fn init(start: BaseType, end: BaseType, step: BaseType) Self {
             return Self{

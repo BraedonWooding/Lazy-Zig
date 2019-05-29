@@ -4,7 +4,7 @@ const sort = std.sort.sort;
 
 pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType: type, comptime ascending: bool, comptime select: fn (BaseType) NewType) type {
     return struct {
-        const Self = this;
+        const Self = @This();
         nextIt: *ItType,
         index: usize,
         count: usize,
@@ -33,11 +33,11 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
             self.nextIt.reset();
         }
 
-        fn compare(a: *const BaseType, b: *const BaseType) bool {
+        fn compare(a: BaseType, b: BaseType) bool {
             if (ascending) {
-                return select(*a) < select(*b);
+                return select(a) < select(b);
             } else {
-                return select(*a) > select(*b);
+                return select(a) > select(b);
             }
         }
     };

@@ -28,7 +28,7 @@ test "Basic Lazy" {
     }
     std.debug.assert(i == 2);
     std.debug.assert(it.contains(2));
-    std.debug.assert(??it.next() == 0);
+    std.debug.assert(it.next().? == 0);
 
     var stringBuf: [3]u8 = undefined;
     std.debug.assert(std.mem.eql(u8, init(obj[0..]).select(u8, toDigitChar).toArray(stringBuf[0..]), "012"));
@@ -152,7 +152,7 @@ fn orderByEven(val: i32, other: i32) bool {
 }
 
 fn toDigitChar(val: i32) u8 {
-    return u8(val) + '0';
+    return @intCast(u8, val) + '0';
 }
 
 fn even(val: i32) bool {
