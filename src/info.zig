@@ -48,7 +48,7 @@ pub fn getType(comptime objType: type) type {
                 if (!hasIteratorMember(objType)) {
                     @compileError("No 'iterator' or 'Child' property found");
                 }
-                const it_type = @typeOf(objType.iterator);
+                const it_type = @TypeOf(objType.iterator);
                 const return_type = it_type.next.ReturnType;
                 return findTillNoChild(return_type);
             },
