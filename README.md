@@ -8,7 +8,7 @@ Provides just a ton of really nice LINQ like commands, these can be applied on a
 
 Lets say you want to get all the even values in an array;
 
-```Java
+```zig
 
 const Lazy = @import("Lazy/index.zig");
 const warn = @import("std").debug.warn;
