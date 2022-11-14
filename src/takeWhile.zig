@@ -1,10 +1,10 @@
 const std = @import("std");
 
-pub fn iterator(comptime BaseType: type, comptime condition: fn (BaseType) bool) type {
+pub fn iterator(comptime BaseType: type, comptime ItType: type, comptime condition: fn (BaseType) bool) type {
     return struct {
         nextIt: *ItType,
 
-        const Self = this;
+        const Self = @This();
         var reachedCondition: bool = false;
 
         pub fn next(self: *Self) ?BaseType {
@@ -25,7 +25,7 @@ pub fn iterator(comptime BaseType: type, comptime condition: fn (BaseType) bool)
             reachedCondition = false;
         }
 
-        pub fn count(self: *Self) usize {
+        pub fn count(_: *Self) usize {
             @compileError("Count not suitable on take while");
         }
     };

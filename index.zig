@@ -2,59 +2,65 @@ const std = @import("std");
 const arrayIt = @import("src/arrayIterator.zig").iterator;
 const iterator = @import("src/iterator.zig").iterator;
 const enumerateIt = @import("src/enumerate.zig").iterator;
-const TypeId = @import("builtin").TypeId;
-const mem = std.mem;
 const info = @import("src/info.zig");
 
-pub fn init(obj: var) info.getType(@TypeOf(obj)) {
+pub fn init(obj: anytype) info.getType(@TypeOf(obj)) {
     return info.initType(@TypeOf(obj), obj);
 }
 
-pub fn range(start: var, stop: @TypeOf(start), step: @TypeOf(start)) iterator(@TypeOf(start), enumerateIt(@TypeOf(start))) {
+pub fn range(start: anytype, stop: @TypeOf(start), step: @TypeOf(start)) iterator(@TypeOf(start), enumerateIt(@TypeOf(start))) {
     return iterator(@TypeOf(start), enumerateIt(@TypeOf(start))){ .nextIt = enumerateIt(@TypeOf(start)).init(start, stop, step) };
 }
 
 test "Basic Lazy" {
-    var obj = [_]i32{ 0, 1, 2 };
+    const obj = [_]i32{ 0, 1, 2 };
     const result = [_]i32{ 0, 2 };
+
     var buf: [2]i32 = undefined;
-    std.debug.assert(std.mem.eql(i32, init(obj[0..]).where(even).toArray(buf[0..]), result[0..]));
+    var it = blk: {
+        var a = init(obj[0..]);
+        break :blk a.where(even);
+    };
+    try std.testing.expect(std.mem.eql(i32, it.toArray(buf[0..]), result[0..]));
     // Longer format
-    var it = init(obj[0..]).where(even);
     var i: usize = 0;
     while (it.next()) |nxt| {
-        std.debug.assert(nxt == result[i]);
+        try std.testing.expect(nxt == result[i]);
         i += 1;
     }
-    std.debug.assert(i == 2);
-    std.debug.assert(it.contains(2));
-    std.debug.assert(it.next().? == 0);
+    try std.testing.expect(i == 2);
+    try std.testing.expect(it.contains(2));
+    try std.testing.expect(it.next().? == 0);
+
+    const stringResult = "012";
 
     var stringBuf: [3]u8 = undefined;
-    std.debug.assert(std.mem.eql(u8, init(obj[0..]).select(u8, toDigitChar).toArray(stringBuf[0..]), "012"));
-}
-
-fn pow(val: i32) i32 {
-    return val * val;
+    const stringSlice = blk: {
+        var a = init(obj[0..]);
+        var b = a.select(u8, toDigitChar);
+        break :blk b.toArray(stringBuf[0..]);
+    };
+    try std.testing.expect(std.mem.eql(u8, stringSlice, stringResult));
+    try std.testing.expect(std.mem.eql(u8, &stringBuf, stringResult));
 }
 
 test "Readme-Tests" {
-    const warn = std.debug.warn;
-    const assert = std.debug.assert;
-
     var it = range(@as(i32, 0), 100, 1);
     var whereIt = it.where(even);
     var selectIt = whereIt.select(i32, pow);
 
     var outBuf: [100]i32 = undefined;
-    _ = range(@as(i32, 0), 100, 2).toArray(outBuf[0..]);
+    _ = blk: {
+        var a = range(@as(i32, 0), 100, 2);
+        break :blk a.toArray(outBuf[0..]);
+    };
     var i: usize = 0;
     if (selectIt.next()) |next| {
-        assert(next == pow(outBuf[i]));
+        try std.testing.expect(next == pow(outBuf[i]));
         i += 1;
     }
     while (selectIt.next()) |next| {
-        assert(next == pow(outBuf[i]));
+        try std.testing.expect(next == pow(outBuf[i]));
         i += 1;
     }
 
@@ -63,7 +69,7 @@ test "Readme-Tests" {
     var array = selectIt.toArray(buf[0..]);
     i = 0;
     while (i < array.len) : (i += 1) {
-        assert(array[i] == pow(outBuf[i]));
+        try std.testing.expect(array[i] == pow(outBuf[i]));
     }
 }
 
@@ -80,9 +86,13 @@ test "Basic Concat" {
         6,
     };
     var i: i32 = 0;
-    var it = init(obj1[0..]).concat(&init(obj2[0..]));
+    var it = blk: {
+        var a = init(obj1[0..]);
+        var b = init(obj2[0..]);
+        break :blk a.concat(&b);
+    };
     while (it.next()) |next| {
-        std.debug.assert(next == i);
+        try std.testing.expect(next == i);
         i += 1;
     }
 }
@@ -91,19 +101,23 @@ test "Basic Cast" {
     var obj = [_]i32{ 0, 1, 2 };
     const result = [_]u8{ 0, 1, 2 };
     var buf: [3]u8 = undefined;
-    std.debug.assert(std.mem.eql(u8, init(obj[0..]).cast(u8).toArray(buf[0..]), result[0..]));
-}
-
-fn selectManyTest(arr: []const i32) []const i32 {
-    return arr;
+    const it = blk: {
+        var a = init(obj[0..]);
+        var b = a.cast(u8);
+        break :blk b.toArray(buf[0..]);
+    };
+    try std.testing.expect(std.mem.eql(u8, it, result[0..]));
 }
 
 test "Select Many" {
     var obj = [_][]const i32{ ([_]i32{ 0, 1 })[0..], ([_]i32{ 2, 3 })[0..], ([_]i32{ 4, 5 })[0..] };
     var i: i32 = 0;
-    var it = init(obj[0..]).selectMany(i32, selectManyTest);
+    var it = blk: {
+        var a = init(obj[0..]);
+        break :blk a.selectMany(i32, selectManyTest);
+    };
     while (it.next()) |next| {
-        std.debug.assert(i == next);
+        try std.testing.expect(i == next);
         i += 1;
     }
 }
@@ -112,14 +126,24 @@ test "Reverse" {
     var buf: [100]i32 = undefined;
     var obj = [_]i32{ 9, 4, 54, 23, 1 };
     var result = [_]i32{ 1, 23, 54, 4, 9 };
-    std.debug.assert(std.mem.eql(i32, init(obj[0..]).reverse(buf[0..]).toArray(buf[25..]), result[0..]));
+    const it = blk: {
+        var a = init(obj[0..]);
+        var b = a.reverse(buf[0..]);
+        break :blk b.toArray(buf[25..]);
+    };
+    try std.testing.expect(std.mem.eql(i32, it, result[0..]));
 }
 
 test "Sorting" {
     var buf: [100]i32 = undefined;
     var obj = [_]i32{ 9, 4, 54, 23, 1 };
     var result = [_]i32{ 1, 4, 9, 23, 54 };
-    std.debug.assert(std.mem.eql(i32, init(obj[0..]).orderByAscending(i32, orderBySimple, buf[0..]).toArray(buf[25..]), result[0..]));
+    const it = blk: {
+        var a = init(obj[0..]);
+        var b = a.orderByAscending(i32, orderBySimple, buf[0..]);
+        break :blk b.toArray(buf[25..]);
+    };
+    try std.testing.expect(std.mem.eql(i32, it, result[0..]));
 }
 
 test "Basic Lazy_List" {
@@ -132,11 +156,11 @@ test "Basic Lazy_List" {
 
     //const result = [_]i32 { 2 };
     //const buf: [1]i32 = undefined;
-    //std.debug.assert(std.mem.eql(i32, init(list).where(even).toArray(buf[0..]), result[0..]));
+    //try std.testing.expect(std.mem.eql(i32, init(list).where(even).toArray(buf[0..]), result[0..]));
 }
 
-fn orderBySimple(a: i32) i32 {
-    return a;
+fn even(val: i32) bool {
+    return @rem(val, 2) == 0;
 }
 
 fn orderByEven(val: i32, other: i32) bool {
@@ -151,10 +175,18 @@ fn orderByEven(val: i32, other: i32) bool {
     }
 }
 
-fn toDigitChar(val: i32) u8 {
-    return @intCast(u8, val) + '0';
+fn orderBySimple(a: i32) i32 {
+    return a;
 }
 
-fn even(val: i32) bool {
-    return @rem(val, 2) == 0;
+fn pow(val: i32) i32 {
+    return val * val;
+}
+
+fn selectManyTest(arr: []const i32) []const i32 {
+    return arr;
+}
+
+fn toDigitChar(val: i32) u8 {
+    return @intCast(u8, val) + '0';
 }

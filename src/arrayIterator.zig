@@ -1,5 +1,4 @@
 const std = @import("std");
-const TypeId = @import("builtin").TypeId;
 
 pub fn iterator(comptime BaseType: type) type {
     return struct {
@@ -16,7 +15,7 @@ pub fn iterator(comptime BaseType: type) type {
         }
 
         pub fn count(self: *Self) usize {
-            return raw.len;
+            return self.raw.len;
         }
 
         pub fn reset(self: *Self) void {
