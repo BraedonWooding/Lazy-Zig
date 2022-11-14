@@ -1,6 +1,6 @@
 const std = @import("std");
 
-pub fn iterator(comptime BaseType: type, comptime ItType: type, filter: fn (BaseType) bool) type {
+pub fn iterator(comptime BaseType: type, comptime ItType: type, comptime filter: fn (BaseType) bool) type {
     return struct {
         nextIt: *ItType,
 

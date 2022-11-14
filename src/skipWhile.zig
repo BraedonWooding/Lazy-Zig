@@ -1,10 +1,10 @@
 const std = @import("std");
 
-pub fn iterator(comptime BaseType: type, comptime condition: fn (BaseType) bool) type {
+pub fn iterator(comptime BaseType: type, comptime ItType: type, comptime condition: fn (BaseType) bool) type {
     return struct {
         nextIt: *ItType,
 
-        const Self = this;
+        const Self = @This();
         var skipped: bool = false;
 
         pub fn next(self: *Self) ?BaseType {
@@ -21,11 +21,10 @@ pub fn iterator(comptime BaseType: type, comptime condition: fn (BaseType) bool)
 
         pub fn reset(self: *Self) void {
             self.nextIt.reset();
-            i = 0;
         }
 
-        pub fn count(self: *Self) i32 {
-            return amount;
+        pub fn count(_: *Self) usize {
+            @compileError("Count not suitable on skip while");
         }
     };
 }

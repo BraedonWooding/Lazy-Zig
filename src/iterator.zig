@@ -1,5 +1,4 @@
 const std = @import("std");
-const TypeId = @import("builtin").TypeId;
 const whereIt = @import("where.zig").iterator;
 const selectIt = @import("select.zig").iterator;
 const castIt = @import("cast.zig").iterator;
@@ -102,33 +101,33 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             };
         }
 
-        fn performTransform(self: *Self, comptime func: fn (BaseType, BaseType) BaseType, comptime average: bool) ?BaseType {
-            var aggregate: ?BaseType = null;
+        fn performTransform(self: *Self, comptime func: fn (BaseType, BaseType) BaseType, comptime avg: bool) ?BaseType {
+            var agg: ?BaseType = null;
             self.reset();
             defer self.reset();
             var cnt: usize = 0;
 
             while (self.next()) |nxt| {
                 cnt += 1;
-                if (aggregate == null) {
-                    aggregate = nxt;
+                if (agg == null) {
+                    agg = nxt;
                 } else {
-                    aggregate = func(aggregate, nxt);
+                    agg = func(agg, nxt);
                 }
             }
 
-            if (aggregate and average) |agg| {
-                return agg / cnt;
+            if (agg and avg) |some_agg| {
+                return some_agg / cnt;
             } else {
-                return aggregate;
+                return agg;
             }
         }
 
-        pub fn average(self: *Self, comptime func: fn (BaseType, BaseType) BaseType) ?BaseType {
+        pub fn average(_: *Self, comptime func: fn (BaseType, BaseType) BaseType) ?BaseType {
             return performTransform(func, true);
         }
 
-        pub fn aggregate(self: *Self, comptime func: fn (BaseType, BaseType) BaseType) ?BaseType {
+        pub fn aggregate(_: *Self, comptime func: fn (BaseType, BaseType) BaseType) ?BaseType {
             return performTransform(func, false);
         }
 

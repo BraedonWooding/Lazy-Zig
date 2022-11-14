@@ -20,7 +20,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
                 }
 
                 self.count = i;
-                sort(BaseType, self.buf[0..self.count], compare);
+                sort(BaseType, self.buf[0..self.count], {}, compare);
             }
 
             if (self.index >= self.count) return null;
@@ -33,7 +33,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
             self.nextIt.reset();
         }
 
-        fn compare(a: BaseType, b: BaseType) bool {
+        fn compare(_: void, a: BaseType, b: BaseType) bool {
             if (ascending) {
                 return select(a) < select(b);
             } else {
