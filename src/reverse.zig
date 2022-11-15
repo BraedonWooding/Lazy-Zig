@@ -1,7 +1,3 @@
-const std = @import("std");
-const iteratorIt = @import("iterator.zig");
-const sort = std.sort.sort;
-
 pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
     return struct {
         const Self = @This();

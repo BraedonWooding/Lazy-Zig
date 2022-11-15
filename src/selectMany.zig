@@ -1,5 +1,3 @@
-const std = @import("std");
-const info = @import("info.zig");
 const arrayIt = @import("arrayIterator.zig").iterator;
 
 pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType: type, comptime select: fn (BaseType) []const NewType) type {
