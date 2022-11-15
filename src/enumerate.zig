@@ -1,5 +1,3 @@
-const std = @import("std");
-
 pub fn iterator(comptime BaseType: type) type {
     return struct {
         state: BaseType,

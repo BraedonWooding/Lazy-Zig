@@ -1,5 +1,4 @@
 const std = @import("std");
-const arrayIt = @import("src/arrayIterator.zig").iterator;
 const iterator = @import("src/iterator.zig").iterator;
 const enumerateIt = @import("src/enumerate.zig").iterator;
 const info = @import("src/info.zig");

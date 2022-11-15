@@ -1,7 +1,6 @@
 const std = @import("std");
 const arrayIt = @import("arrayIterator.zig").iterator;
 const iterator = @import("iterator.zig").iterator;
-const enumerateIt = @import("enumerate.zig").iterator;
 
 pub fn getType(comptime objType: type) type {
     comptime {
