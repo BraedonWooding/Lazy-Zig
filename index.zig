@@ -147,16 +147,23 @@ test "Sorting" {
 }
 
 test "Basic Lazy_List" {
-    //var list = std.ArrayList(i32).init(std.debug.global_allocator);
-    //defer list.deinit();
+    const allocator = std.testing.allocator;
 
-    //try list.append(1);
-    //try list.append(2);
-    //try list.append(3);
+    var list = std.ArrayList(i32).init(allocator);
+    defer list.deinit();
 
-    //const result = [_]i32 { 2 };
-    //const buf: [1]i32 = undefined;
-    //try std.testing.expect(std.mem.eql(i32, init(list).where(even).toArray(buf[0..]), result[0..]));
+    try list.append(1);
+    try list.append(2);
+    try list.append(3);
+
+    const result = [_]i32{2};
+    var buf: [1]i32 = undefined;
+    const it = blk: {
+        var a = init(list.items);
+        var b = a.where(even);
+        break :blk b.toArray(buf[0..]);
+    };
+    try std.testing.expect(std.mem.eql(i32, it, result[0..]));
 }
 
 fn even(val: i32) bool {
