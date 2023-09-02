@@ -11,6 +11,10 @@ pub fn range(start: anytype, stop: @TypeOf(start), step: @TypeOf(start)) iterato
     return iterator(@TypeOf(start), enumerateIt(@TypeOf(start))){ .nextIt = enumerateIt(@TypeOf(start)).init(start, stop, step) };
 }
 
+test {
+    std.testing.refAllDecls(@This());
+}
+
 test "Basic Lazy" {
     const obj = [_]i32{ 0, 1, 2 };
     const result = [_]i32{ 0, 2 };
@@ -194,5 +198,5 @@ fn selectManyTest(arr: []const i32) []const i32 {
 }
 
 fn toDigitChar(val: i32) u8 {
-    return @intCast(u8, val) + '0';
+    return @as(u8, @intCast(val)) + '0';
 }
