@@ -18,7 +18,7 @@ pub fn iterator(comptime BaseType: type, comptime NewType: type, comptime ItType
                 }
 
                 self.count = i;
-                std.sort.sort(BaseType, self.buf[0..self.count], {}, compare);
+                std.mem.sort(BaseType, self.buf[0..self.count], {}, compare);
             }
 
             if (self.index >= self.count) return null;
