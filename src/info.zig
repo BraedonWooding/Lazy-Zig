@@ -23,8 +23,9 @@ pub fn getType(comptime objType: type) type {
                     @compileError("No 'iterator' or 'Child' property found");
                 }
                 const it_type = @TypeOf(objType.iterator);
-                const return_type = it_type.next.ReturnType;
-                return findTillNoChild(return_type);
+                const return_type = @typeInfo(@TypeOf(@typeInfo(it_type).Fn.return_type.?.next)).Fn.return_type.?;
+
+                return iterator(findTillNoChild(return_type), it_type);
             },
             else => {
                 @compileError("Can only use slices and structs have 'iterator' function, remember to convert arrays to slices.");
@@ -62,7 +63,7 @@ pub fn initType(comptime objType: type, value: anytype) getType(objType) {
 
 fn findTillNoChild(comptime Type: type) type {
     if (@typeInfo(Type) == .Optional) {
-        return findTillNoChild(Type.Child);
+        return findTillNoChild(@typeInfo(Type).Optional.child);
     }
     return Type;
 }
@@ -73,8 +74,8 @@ fn hasIteratorMember(comptime objType: type) bool {
             return false;
         }
 
-        inline for (@typeInfo(objType).Struct.fields) |f| {
-            if (std.mem.eql(u8, @field(objType, f.name), "iterator")) {
+        inline for (@typeInfo(objType).Struct.decls) |f| {
+            if (std.mem.eql(u8, f.name, "iterator")) {
                 return true;
             }
         }
