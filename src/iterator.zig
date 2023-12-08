@@ -219,12 +219,12 @@ pub fn iterator(comptime BaseType: type, comptime ItType: type) type {
             return buffer[0..c];
         }
 
-        pub fn toList(self: *Self, allocator: *std.mem.Allocator) std.ArrayList(BaseType) {
+        pub fn toList(self: *Self, allocator: std.mem.Allocator) !std.ArrayList(BaseType) {
             self.reset();
             defer self.reset();
             var list = std.ArrayList(BaseType).init(allocator);
             while (self.next()) |nxt| {
-                list.append(nxt);
+                try list.append(nxt);
             }
             return list;
         }
